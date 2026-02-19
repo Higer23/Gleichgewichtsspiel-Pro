@@ -1,0 +1,526 @@
+/* ============================================================
+   styles.css — Das Gleichgewichtsspiel Pro Edition
+   Author: Higer
+   ============================================================ */
+
+/* ─── CSS Custom Properties ────────────────────────────────── */
+:root {
+  --cyan:         #00d4ff;
+  --purple:       #a855f7;
+  --green-neon:   #00ff88;
+  --red-neon:     #ff3d3d;
+  --orange-neon:  #ff9500;
+  --yellow-neon:  #ffe500;
+  --bg-dark:      #0d1117;
+  --bg-card:      rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-glow:   rgba(0, 212, 255, 0.06);
+}
+
+/* ─── Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  background-color: var(--bg-dark);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,212,255,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(168,85,247,0.06) 0%, transparent 60%);
+}
+
+.bg-game-bg { background-color: var(--bg-dark); }
+
+/* ─── Glass Panel ──────────────────────────────────────────── */
+.glass-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid var(--glass-border);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-panel:hover { border-color: rgba(255,255,255,0.12); }
+
+/* ─── Neon Text ────────────────────────────────────────────── */
+.neon-text { text-shadow: 0 0 20px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.3); }
+.neon-text-multi {
+  filter: drop-shadow(0 0 12px rgba(0,212,255,0.4));
+}
+
+/* ─── Buttons ──────────────────────────────────────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.15);
+  transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+  box-shadow: 0 4px 24px rgba(99,102,241,0.3);
+}
+.btn-primary:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 32px rgba(99,102,241,0.45);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: #94a3b8;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,0.08); color: #e2e8f0; border-color: rgba(255,255,255,0.18); }
+
+/* ─── Game Inputs ──────────────────────────────────────────── */
+.game-input {
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.1);
+  color: #e2e8f0;
+  border-radius: 12px;
+  transition: border-color 0.25s, box-shadow 0.25s, background 0.25s;
+  outline: none;
+}
+.game-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.12), 0 0 20px rgba(0,212,255,0.08);
+  background: rgba(0,212,255,0.04);
+}
+.game-input.input-correct {
+  border-color: var(--green-neon);
+  box-shadow: 0 0 0 3px rgba(0,255,136,0.15);
+  background: rgba(0,255,136,0.04);
+}
+.game-input.input-error {
+  border-color: var(--red-neon);
+  box-shadow: 0 0 0 3px rgba(255,61,61,0.15);
+  animation: shake 0.4s ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+/* ─── Instruction Display ──────────────────────────────────── */
+.instruction-display {
+  background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, rgba(168,85,247,0.04) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  position: relative;
+  overflow: hidden;
+}
+.instruction-display::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center top, rgba(0,212,255,0.06) 0%, transparent 70%);
+}
+.task-glow {
+  background: radial-gradient(ellipse at top center, rgba(0,212,255,0.04) 0%, transparent 60%);
+}
+
+/* ─── Balance Display ──────────────────────────────────────── */
+.balance-display {
+  transition: color 0.4s ease;
+  position: relative;
+  will-change: contents;
+}
+.balance-display.positive { color: var(--green-neon) !important; }
+.balance-display.negative { color: var(--red-neon) !important; }
+
+/* ─── Active Turn Card ─────────────────────────────────────── */
+.player-card { transition: box-shadow 0.4s ease, border-color 0.4s ease; }
+.player-card.active-turn {
+  border-color: rgba(0,212,255,0.4) !important;
+  box-shadow: 0 0 30px rgba(0,212,255,0.12), inset 0 0 20px rgba(0,212,255,0.03);
+}
+
+/* ─── Tickets ──────────────────────────────────────────────── */
+.ticket {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  animation: ticketPop 0.3s cubic-bezier(0.34,1.56,0.64,1) both;
+  cursor: default;
+  user-select: none;
+  border: 1.5px solid transparent;
+  transition: transform 0.2s;
+}
+.ticket:hover { transform: scale(1.1); }
+.ticket.positive {
+  background: rgba(0,255,136,0.15);
+  border-color: rgba(0,255,136,0.4);
+  color: var(--green-neon);
+  box-shadow: 0 2px 12px rgba(0,255,136,0.15);
+}
+.ticket.negative {
+  background: rgba(255,61,61,0.15);
+  border-color: rgba(255,61,61,0.4);
+  color: var(--red-neon);
+  box-shadow: 0 2px 12px rgba(255,61,61,0.15);
+}
+
+@keyframes ticketPop {
+  from { opacity: 0; transform: scale(0.3) rotate(-15deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* Ticket Stack Area tickets */
+.stack-ticket {
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+  position: relative;
+}
+.stack-ticket.positive {
+  background: rgba(0,255,136,0.18);
+  border-color: rgba(0,255,136,0.45);
+  color: var(--green-neon);
+}
+.stack-ticket.negative {
+  background: rgba(255,61,61,0.18);
+  border-color: rgba(255,61,61,0.45);
+  color: var(--red-neon);
+}
+.stack-ticket.fly-in  { animation: flyIn  0.45s cubic-bezier(0.34,1.56,0.64,1) both; }
+.stack-ticket.fly-out { animation: flyOut 0.35s ease-in forwards; }
+
+@keyframes flyIn {
+  from { opacity: 0; transform: translateY(-40px) scale(0.4); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes flyOut {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: translateY(40px) scale(0.2); }
+}
+
+/* ─── Level Badge ──────────────────────────────────────────── */
+.level-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  background: linear-gradient(135deg, rgba(0,212,255,0.15), rgba(99,102,241,0.15));
+  border: 2px solid rgba(0,212,255,0.3);
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,212,255,0.12);
+  line-height: 1;
+}
+
+/* ─── Progress Bar ─────────────────────────────────────────── */
+.progress-track  { background: rgba(255,255,255,0.06); }
+.progress-fill   { background: linear-gradient(90deg, var(--cyan), #6366f1, var(--purple)); box-shadow: 0 0 12px rgba(0,212,255,0.4); }
+
+/* ─── Tab Navigation ───────────────────────────────────────── */
+.tab-btn {
+  color: #64748b;
+  transition: all 0.25s;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(168,85,247,0.12));
+  color: var(--cyan);
+  border: 1px solid rgba(0,212,255,0.2);
+  box-shadow: 0 0 16px rgba(0,212,255,0.08);
+}
+.tab-btn:not(.active):hover { color: #94a3b8; background: rgba(255,255,255,0.04); }
+.tab-content { animation: tabFade 0.25s ease; }
+@keyframes tabFade { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── Streak Flame ─────────────────────────────────────────── */
+.streak-flame {
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+.streak-flame.pulse { animation: flamePulse 0.6s ease; }
+@keyframes flamePulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.4) rotate(5deg); }
+}
+
+/* ─── Feedback Area ────────────────────────────────────────── */
+.feedback-area {
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+  animation: slideUp 0.3s ease;
+}
+.feedback-area.success {
+  background: rgba(0,255,136,0.06);
+  border-color: rgba(0,255,136,0.25);
+}
+.feedback-area.error {
+  background: rgba(255,61,61,0.06);
+  border-color: rgba(255,61,61,0.25);
+}
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(12px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─── Score Popup ──────────────────────────────────────────── */
+.score-popup {
+  position: fixed;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--cyan);
+  text-shadow: 0 0 20px rgba(0,212,255,0.8);
+  pointer-events: none;
+  z-index: 200;
+  animation: scoreFloat 1.4s ease-out forwards;
+}
+@keyframes scoreFloat {
+  0%   { opacity:0; transform: translateY(0) scale(0.5); }
+  20%  { opacity:1; transform: translateY(-20px) scale(1.1); }
+  80%  { opacity:1; transform: translateY(-60px) scale(1); }
+  100% { opacity:0; transform: translateY(-80px) scale(0.8); }
+}
+
+/* ─── Achievement Toast ────────────────────────────────────── */
+.achievement-toast {
+  background: linear-gradient(135deg, rgba(255,229,0,0.12), rgba(168,85,247,0.12));
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,229,0,0.3);
+  border-radius: 16px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 8px 32px rgba(255,229,0,0.15), 0 0 0 1px rgba(255,255,255,0.05);
+  min-width: 260px;
+  max-width: 340px;
+  animation: toastIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  pointer-events: auto;
+}
+.achievement-toast.removing { animation: toastOut 0.35s ease-in forwards; }
+@keyframes toastIn  { from { opacity:0; transform:translateX(100px) scale(0.8); } to { opacity:1; transform:translateX(0) scale(1); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(0); }               to { opacity:0; transform:translateX(60px); } }
+
+/* ─── Level-Up Flash ───────────────────────────────────────── */
+.levelup-flash {
+  position: fixed; inset: 0; z-index: 300;
+  background: radial-gradient(ellipse at center, rgba(0,212,255,0.2) 0%, transparent 70%);
+  pointer-events: none;
+  animation: levelFlash 0.8s ease forwards;
+}
+@keyframes levelFlash {
+  0%   { opacity:0; transform:scale(0.8); }
+  30%  { opacity:1; transform:scale(1.05); }
+  100% { opacity:0; transform:scale(1.2); }
+}
+
+/* ─── Computer Thinking ────────────────────────────────────── */
+.computer-thinking-animation { animation: robotBob 1s ease-in-out infinite; }
+@keyframes robotBob {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-8px); }
+}
+.thinking-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--purple);
+  animation: thinkBlink 1.2s ease-in-out infinite;
+}
+.thinking-dot:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes thinkBlink {
+  0%,80%,100% { opacity:0.2; transform:scale(0.8); }
+  40%         { opacity:1;   transform:scale(1); }
+}
+
+/* ─── Game Log ─────────────────────────────────────────────── */
+.game-log-entry {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  animation: logSlide 0.3s ease;
+  border-left: 3px solid transparent;
+}
+.game-log-entry.correct { background:rgba(0,255,136,0.05);  border-color: rgba(0,255,136,0.3); }
+.game-log-entry.incorrect{ background:rgba(255,61,61,0.05); border-color: rgba(255,61,61,0.3);  }
+.game-log-entry.computer { background:rgba(168,85,247,0.05); border-color:rgba(168,85,247,0.3); }
+@keyframes logSlide { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:translateX(0); } }
+
+/* ─── Achievement Grid ─────────────────────────────────────── */
+.achievement-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 6px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: all 0.3s;
+  cursor: help;
+  text-align: center;
+  min-height: 70px;
+}
+.achievement-item.unlocked {
+  background: rgba(255,229,0,0.07);
+  border-color: rgba(255,229,0,0.3);
+  box-shadow: 0 0 16px rgba(255,229,0,0.08);
+}
+.achievement-item:hover.unlocked { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255,229,0,0.15); }
+.achievement-icon { font-size: 1.5rem; line-height: 1; }
+.achievement-name { font-size: 0.6rem; color: #64748b; font-family: 'Orbitron', sans-serif; font-weight: 600; }
+.achievement-item.unlocked .achievement-name { color: #fbbf24; }
+
+/* ─── Reference Rows ───────────────────────────────────────── */
+.ref-row { background: rgba(255,255,255,0.02); transition: background 0.2s; }
+.ref-row:hover  { background: rgba(255,255,255,0.05); }
+.highlight-row  { background: rgba(168,85,247,0.06) !important; border: 1px solid rgba(168,85,247,0.2); }
+
+/* ─── Scenario Cards ───────────────────────────────────────── */
+.scenario-card { transition: transform 0.2s; }
+.scenario-card:hover { transform: translateY(-2px); }
+
+/* ─── Badge Styles ─────────────────────────────────────────── */
+.badge-action, .badge-item {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  letter-spacing: 0.05em;
+}
+.badge-nehmen  { background:rgba(0,212,255,0.15);  color:var(--cyan);       border:1px solid rgba(0,212,255,0.3); }
+.badge-abgeben { background:rgba(255,149,0,0.15);  color:var(--orange-neon); border:1px solid rgba(255,149,0,0.3); }
+.badge-positiv { background:rgba(0,255,136,0.15);  color:var(--green-neon); border:1px solid rgba(0,255,136,0.3); }
+.badge-negativ { background:rgba(255,61,61,0.15);  color:var(--red-neon);   border:1px solid rgba(255,61,61,0.3);  }
+
+/* ─── Math Display ─────────────────────────────────────────── */
+.math-display {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  background: rgba(0,0,0,0.3);
+  padding: 8px 14px;
+  border-radius: 8px;
+  display: inline-block;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ─── Modal ────────────────────────────────────────────────── */
+.modal-overlay { display:flex; align-items:center; justify-content:center; }
+.modal-overlay.hidden { display:none; }
+.modal-backdrop { background:rgba(0,0,0,0.7); backdrop-filter:blur(8px); }
+.modal-content  { animation:modalIn 0.35s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes modalIn { from { opacity:0; transform:scale(0.9) translateY(20px); } to { opacity:1; transform:scale(1) translateY(0); } }
+
+/* ─── Language Buttons ─────────────────────────────────────── */
+.lang-btn { transition: all 0.2s; border: none; background: transparent; cursor: pointer; }
+.lang-btn.active { color: var(--cyan) !important; background: rgba(0,212,255,0.1); }
+
+/* ─── Timer ────────────────────────────────────────────────── */
+#timerDisplay.warning { color: var(--red-neon) !important; animation: timerPulse 0.5s ease infinite; }
+@keyframes timerPulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+/* ─── Heatmap ──────────────────────────────────────────────── */
+.heatmap-cell {
+  aspect-ratio: 1;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid transparent;
+  transition: all 0.3s;
+  cursor: default;
+}
+.heatmap-cell:hover { transform: scale(1.04); }
+.heatmap-label { font-size: 0.6rem; font-family: 'Orbitron', sans-serif; text-align: center; }
+.heatmap-count { font-size: 1.2rem; font-family: 'Orbitron', sans-serif; font-weight: 900; }
+
+/* ─── Glassmorphism Maker Signature ────────────────────────── */
+.maker-signature-glass {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  border-radius: 40px;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.maker-signature-glass:hover { transform: translateY(-2px); }
+
+.maker-glass-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 40px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s;
+}
+.maker-signature-glass:hover .maker-glass-inner {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(0,212,255,0.25);
+  box-shadow: 0 0 24px rgba(0,212,255,0.1), 0 4px 20px rgba(168,85,247,0.08);
+}
+
+.maker-name {
+  position: relative;
+  animation: nameShimmer 3s linear infinite;
+}
+@keyframes nameShimmer {
+  0%,100% { filter: brightness(1); }
+  50%     { filter: brightness(1.3) drop-shadow(0 0 6px rgba(0,212,255,0.5)); }
+}
+
+/* ─── Turn Indicator ───────────────────────────────────────── */
+.turn-indicator { font-size: 0.65rem; letter-spacing: 0.08em; }
+
+/* ─── Toggle Switch ────────────────────────────────────────── */
+input[type="checkbox"]:checked ~ .toggle-track { background: rgba(234,179,8,0.5); }
+input[type="checkbox"]:checked ~ .toggle-thumb { transform: translateX(24px); background: #fbbf24; }
+.toggle-thumb, .toggle-track { transition: all 0.3s; }
+
+/* ─── Rules Section ────────────────────────────────────────── */
+.rules-section { transition: background 0.2s; }
+
+/* ─── Scrollbar ────────────────────────────────────────────── */
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+/* ─── Chart.js canvas override ─────────────────────────────── */
+canvas { max-width: 100% !important; }
+
+/* ─── Cheat Overlay ────────────────────────────────────────── */
+#cheatOverlay { animation: slideUp 0.3s ease; }
+
+/* ─── SVG Ticket Flight ────────────────────────────────────── */
+.svg-ticket {
+  transition: all 0.1s;
+}
+
+/* ─── Accessibility ─────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+
+/* ─── BG Canvas ─────────────────────────────────────────────── */
+#bgCanvas { opacity: 0.6; }
