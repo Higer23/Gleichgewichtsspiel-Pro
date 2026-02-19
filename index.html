@@ -1,0 +1,736 @@
+﻿<!DOCTYPE html>
+<html lang="de" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Das Gleichgewichtsspiel Pro – Lerne Addition und Subtraktion positiver und negativer Zahlen." />
+  <meta name="theme-color" content="#0d1117" />
+  <title>Das Gleichgewichtsspiel – Pro Edition</title>
+
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            rajdhani: ['Rajdhani', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
+
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+
+<body class="bg-game-bg font-rajdhani text-slate-200 min-h-screen overflow-x-hidden" role="main">
+
+
+  <!-- Canvas Layers -->
+  <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0" aria-hidden="true"></canvas>
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50" aria-hidden="true"></canvas>
+
+
+  <!-- CRASH SCREEN -->
+  <div id="crashScreen" class="fixed inset-0 z-[999] hidden flex-col items-center justify-center bg-black/90 backdrop-blur-xl">
+    <div class="text-center p-8 max-w-md">
+      <div class="text-6xl mb-4">⚠️</div>
+      <h2 class="font-orbitron text-2xl text-red-400 mb-3">Kritischer Fehler</h2>
+      <p id="crashMessage" class="text-slate-300 mb-6">Ein unerwarteter Fehler ist aufgetreten.</p>
+      <button onclick="location.reload()" class="btn-primary px-6 py-3 rounded-xl font-orbitron">
+        <i class="fas fa-redo mr-2"></i>Neu starten
+      </button>
+    </div>
+  </div>
+
+
+  <!-- RULES MODAL -->
+  <div id="rulesModal" class="modal-overlay fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
+    <div class="modal-backdrop absolute inset-0" id="rulesBackdrop"></div>
+    <div class="modal-content glass-panel relative z-10 max-w-3xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto rounded-2xl p-8">
+      <button id="closeRules" class="absolute top-4 right-4 text-slate-400 hover:text-cyan-400 transition-colors text-2xl" aria-label="Schließen">
+        <i class="fas fa-times"></i>
+      </button>
+      <h2 id="rulesTitle" class="font-orbitron text-3xl font-bold text-cyan-400 mb-2 neon-text">
+        <i class="fas fa-book-open mr-3"></i><span data-i18n="rules_title">Spielregeln</span>
+      </h2>
+      <p class="text-slate-400 mb-8 text-lg" data-i18n="rules_subtitle">Verstehe die Magie hinter positiven und negativen Zahlen.</p>
+
+
+      <div class="rules-section mb-6 p-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
+        <h3 class="font-orbitron text-lg font-semibold text-cyan-300 mb-4">
+          <i class="fas fa-lightbulb mr-2 text-yellow-400"></i><span data-i18n="rules_concept">Das Grundprinzip</span>
+        </h3>
+        <p class="text-slate-300 leading-relaxed mb-4" data-i18n="rules_concept_text">
+          Stell dir vor, du hast zwei Arten von Tickets: <span class="text-green-400 font-semibold">Positive Tickets (+1€)</span> und <span class="text-red-400 font-semibold">Negative Tickets (-1€)</span>.
+          Dein Kontostand bestimmt sich durch die Summe aller Tickets, die du besitzt.
+        </p>
+      </div>
+
+
+      <h3 class="font-orbitron text-lg font-semibold text-slate-200 mb-4">
+        <i class="fas fa-calculator mr-2 text-purple-400"></i><span data-i18n="rules_scenarios">Die vier Szenarien</span>
+      </h3>
+
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div class="scenario-card p-5 rounded-xl border border-green-500/30 bg-green-500/5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="badge-action badge-nehmen" data-i18n="nehmen">NEHMEN</span>
+            <span class="badge-item badge-positiv" data-i18n="positiv">POSITIV</span>
+          </div>
+          <p class="text-slate-300 text-sm mb-2">"Nehmen 3 Positive Tickets"</p>
+          <div class="math-display">+(+3) = <span class="text-green-400">+3</span></div>
+        </div>
+        <div class="scenario-card p-5 rounded-xl border border-red-500/30 bg-red-500/5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="badge-action badge-nehmen" data-i18n="nehmen">NEHMEN</span>
+            <span class="badge-item badge-negativ" data-i18n="negativ">NEGATIV</span>
+          </div>
+          <p class="text-slate-300 text-sm mb-2">"Nehmen 4 Negative Tickets"</p>
+          <div class="math-display">+(-4) = <span class="text-red-400">-4</span></div>
+        </div>
+        <div class="scenario-card p-5 rounded-xl border border-orange-500/30 bg-orange-500/5">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="badge-action badge-abgeben" data-i18n="abgeben">ABGEBEN</span>
+            <span class="badge-item badge-positiv" data-i18n="positiv">POSITIV</span>
+          </div>
+          <p class="text-slate-300 text-sm mb-2">"Abgeben 2 Positive Tickets"</p>
+          <div class="math-display">-(+2) = <span class="text-red-400">-2</span></div>
+        </div>
+        <div class="scenario-card p-5 rounded-xl border border-purple-500/30 bg-purple-500/5 relative overflow-hidden">
+          <div class="absolute top-2 right-2 text-xs text-purple-300 bg-purple-500/20 px-2 py-1 rounded-full">✨ Magie!</div>
+          <div class="flex items-center gap-2 mb-3">
+            <span class="badge-action badge-abgeben" data-i18n="abgeben">ABGEBEN</span>
+            <span class="badge-item badge-negativ" data-i18n="negativ">NEGATIV</span>
+          </div>
+          <p class="text-slate-300 text-sm mb-2">"Abgeben 5 Negative Tickets"</p>
+          <div class="math-display">-(-5) = <span class="text-green-400">+5</span></div>
+        </div>
+      </div>
+
+
+      <div class="p-6 rounded-xl border border-purple-500/30 bg-purple-500/5 mb-6">
+        <h3 class="font-orbitron text-base font-semibold text-purple-300 mb-3">
+          <i class="fas fa-infinity mr-2"></i><span data-i18n="rules_math_rule">Die Mathematische Regel</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-3 text-center">
+          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-green-400 text-lg font-bold">+(+) = +</div></div>
+          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-red-400 text-lg font-bold">+(-) = -</div></div>
+          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-red-400 text-lg font-bold">-(+) = -</div></div>
+          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-green-400 text-lg font-bold">-(-) = +</div></div>
+        </div>
+      </div>
+
+
+      <button id="closeRulesBtn" class="mt-4 w-full btn-primary py-4 rounded-xl font-orbitron text-lg font-semibold">
+        <i class="fas fa-play mr-2"></i><span data-i18n="start_game">Spiel starten!</span>
+      </button>
+    </div>
+  </div>
+
+
+  <!-- TEACHER MODE MODAL -->
+  <div id="teacherModal" class="modal-overlay fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop absolute inset-0" id="teacherBackdrop"></div>
+    <div class="modal-content glass-panel relative z-10 max-w-2xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto rounded-2xl p-8">
+      <button id="closeTeacher" class="absolute top-4 right-4 text-slate-400 hover:text-cyan-400 transition-colors text-2xl">
+        <i class="fas fa-times"></i>
+      </button>
+      <h2 class="font-orbitron text-2xl font-bold text-yellow-400 mb-2">
+        <i class="fas fa-chalkboard-teacher mr-3"></i>Lehrermodus
+      </h2>
+      <p class="text-slate-400 mb-6 text-sm">Konfiguriere das Spiel für den Unterricht.</p>
+
+
+      <div class="space-y-6">
+        <!-- Number Range -->
+        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
+          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-sliders-h mr-2"></i>Zahlenbereich</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs text-slate-400 uppercase tracking-widest mb-2 block">Minimum</label>
+              <input type="number" id="teacherMin" value="1" min="1" max="50" class="game-input w-full px-3 py-2 rounded-lg text-center font-mono" />
+            </div>
+            <div>
+              <label class="text-xs text-slate-400 uppercase tracking-widest mb-2 block">Maximum</label>
+              <input type="number" id="teacherMax" value="10" min="1" max="100" class="game-input w-full px-3 py-2 rounded-lg text-center font-mono" />
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Time Limit -->
+        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
+          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-clock mr-2"></i>Zeitlimit pro Zug</h3>
+          <div class="flex items-center gap-4">
+            <input type="range" id="teacherTimer" min="0" max="120" value="0" step="5" class="flex-1 accent-yellow-400" />
+            <span id="teacherTimerDisplay" class="font-orbitron text-yellow-400 w-20 text-center">Aus</span>
+          </div>
+        </div>
+
+
+        <!-- Cheat Sheet -->
+        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
+          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-eye mr-2"></i>Spickzettel (Demo-Modus)</h3>
+          <label class="flex items-center gap-3 cursor-pointer">
+            <div class="relative">
+              <input type="checkbox" id="teacherCheatSheet" class="sr-only" />
+              <div class="toggle-track w-12 h-6 rounded-full bg-slate-700 transition-colors"></div>
+              <div class="toggle-thumb absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></div>
+            </div>
+            <span class="text-slate-300 text-sm">Lösungen immer anzeigen (für Demonstrationen)</span>
+          </label>
+          <div id="cheatSheetPanel" class="mt-4 hidden">
+            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+              <div class="font-orbitron text-xs text-yellow-300 mb-3">FORMELBLATT</div>
+              <div class="grid grid-cols-2 gap-2 text-sm font-mono">
+                <div class="bg-white/5 p-2 rounded text-green-400">+(+n) = +n</div>
+                <div class="bg-white/5 p-2 rounded text-red-400">+(-n) = -n</div>
+                <div class="bg-white/5 p-2 rounded text-red-400">-(+n) = -n</div>
+                <div class="bg-white/5 p-2 rounded text-green-400">-(-n) = +n</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Lock Level -->
+        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
+          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-lock mr-2"></i>Level fixieren</h3>
+          <select id="teacherLevel" class="game-input w-full px-3 py-2 rounded-lg font-mono">
+            <option value="-1">Automatisch (nach Streak)</option>
+            <option value="0">Level 1 – Anfänger (1–5)</option>
+            <option value="1">Level 2 – Entdecker (1–8)</option>
+            <option value="2">Level 3 – Lernender (1–12)</option>
+            <option value="3">Level 4 – Fortgeschritten (1–15)</option>
+            <option value="4">Level 5 – Profi (1–20)</option>
+            <option value="5">Level 6 – Meister (1–25)</option>
+          </select>
+        </div>
+
+
+        <button id="applyTeacher" class="w-full py-3 rounded-xl font-orbitron text-sm font-bold bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all">
+          <i class="fas fa-check mr-2"></i>Einstellungen übernehmen
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ACHIEVEMENT TOASTS -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[90] flex flex-col gap-3 pointer-events-none" aria-live="polite"></div>
+
+
+  <!-- MAIN APP WRAPPER -->
+  <div class="relative z-10 min-h-screen flex flex-col">
+
+
+    <!-- HEADER -->
+    <header class="w-full pt-6 pb-4 px-4">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="text-center md:text-left">
+          <h1 class="font-orbitron text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 neon-text-multi leading-tight">
+            Das Gleichgewichtsspiel
+          </h1>
+          <p class="text-slate-400 text-sm tracking-[0.3em] uppercase font-rajdhani">Pro Edition</p>
+        </div>
+
+
+        <div class="flex items-center gap-2 flex-wrap justify-center">
+
+
+          <!-- Language Switcher -->
+          <div class="glass-panel flex items-center rounded-xl overflow-hidden border border-white/10">
+            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-cyan-400 bg-cyan-500/10" data-lang="de">DE</button>
+            <div class="w-px h-6 bg-white/10"></div>
+            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-slate-400 hover:text-white" data-lang="en">EN</button>
+            <div class="w-px h-6 bg-white/10"></div>
+            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-slate-400 hover:text-white" data-lang="tr">TR</button>
+          </div>
+
+
+          <!-- Audio Toggle -->
+          <button id="audioToggle" class="glass-panel px-3 py-2 rounded-xl hover:border-cyan-400/50 transition-all" title="Audio ein/aus" aria-label="Audio umschalten">
+            <i class="fas fa-volume-up text-cyan-400" id="audioIcon"></i>
+          </button>
+
+
+          <!-- Teacher Mode Toggle (hidden, activated via secret key combo) -->
+          <button id="teacherModeBtn" class="glass-panel px-3 py-2 rounded-xl hover:border-yellow-400/50 transition-all hidden" title="Lehrermodus" aria-label="Lehrermodus öffnen">
+            <i class="fas fa-chalkboard-teacher text-yellow-400"></i>
+          </button>
+
+
+          <!-- Streak -->
+          <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2" title="Aktuelle Siegesserie">
+            <span id="streakFlame" class="streak-flame text-2xl" aria-hidden="true">🔥</span>
+            <div>
+              <div class="text-xs text-slate-400 uppercase tracking-widest leading-none" data-i18n="streak">Streak</div>
+              <div id="streakCount" class="font-orbitron text-xl font-bold text-orange-400">0</div>
+            </div>
+          </div>
+
+
+          <!-- High Score -->
+          <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2" title="Highscore">
+            <i class="fas fa-trophy text-yellow-400 text-xl" aria-hidden="true"></i>
+            <div>
+              <div class="text-xs text-slate-400 uppercase tracking-widest leading-none" data-i18n="highscore">Highscore</div>
+              <div id="highScore" class="font-orbitron text-xl font-bold text-yellow-400">0</div>
+            </div>
+          </div>
+
+
+          <!-- Rules Button -->
+          <button id="openRules" class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 hover:border-cyan-400/50 transition-all group" aria-label="Spielregeln öffnen">
+            <i class="fas fa-book text-cyan-400 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
+            <span class="text-slate-300 text-sm font-semibold hidden sm:inline" data-i18n="rules">Regeln</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- LEVEL & PROGRESS BAR -->
+    <div class="px-4 mb-4">
+      <div class="max-w-6xl mx-auto">
+        <div class="glass-panel rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-2">
+            <div class="flex items-center gap-3">
+              <div class="level-badge">
+                <span class="font-orbitron text-xs font-bold text-white">LVL</span>
+                <span id="levelDisplay" class="font-orbitron text-lg font-black text-cyan-400">1</span>
+              </div>
+              <div>
+                <div class="font-semibold text-slate-200 text-sm" id="levelName">Anfänger</div>
+                <div class="text-slate-500 text-xs" id="levelRange">Zahlen: 1–5</div>
+              </div>
+            </div>
+            <!-- Timer Display (hidden unless teacher mode activated) -->
+            <div id="timerDisplay" class="hidden font-orbitron text-xl font-bold text-yellow-400">
+              <i class="fas fa-clock mr-2 text-sm"></i><span id="timerValue">--</span>s
+            </div>
+            <div class="text-right">
+              <div class="text-slate-400 text-xs" data-i18n="points">Punkte</div>
+              <div id="scoreDisplay" class="font-orbitron text-xl font-bold text-cyan-400">0</div>
+            </div>
+          </div>
+          <div class="progress-track rounded-full h-3 mt-2" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progressBar" class="progress-fill h-full rounded-full w-0 transition-all duration-700"></div>
+          </div>
+          <div class="flex justify-between mt-1">
+            <span class="text-slate-600 text-xs" id="progressLabel">0 / 5 bis Level 2</span>
+            <span class="text-slate-600 text-xs" id="progressPct">0%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- TAB NAVIGATION -->
+    <div class="px-4 mb-5">
+      <div class="max-w-6xl mx-auto">
+        <div class="glass-panel rounded-2xl p-1 flex gap-1">
+          <button class="tab-btn active flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="game">
+            <i class="fas fa-gamepad mr-2"></i><span data-i18n="tab_game">Spiel</span>
+          </button>
+          <button class="tab-btn flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="stats">
+            <i class="fas fa-chart-bar mr-2"></i><span data-i18n="tab_stats">Statistik</span>
+          </button>
+          <button class="tab-btn flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="tickets">
+            <i class="fas fa-ticket-alt mr-2"></i><span data-i18n="tab_tickets">Ticket-Stack</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 px-4 pb-8">
+      <div class="max-w-6xl mx-auto">
+
+
+        <!-- ===== TAB: GAME ===== -->
+        <div id="tab-game" class="tab-content">
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+
+            <!-- LEFT: USER PANEL -->
+            <div class="lg:col-span-2 space-y-5">
+
+
+              <!-- Balance Cards -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="glass-panel rounded-2xl p-5 border-cyan-500/20 relative overflow-hidden player-card" id="userCard">
+                  <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none"></div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-user text-cyan-400 text-sm"></i>
+                    <span class="text-slate-400 text-xs uppercase tracking-widest font-semibold" data-i18n="your_account">Dein Konto</span>
+                  </div>
+                  <div id="userBalance" class="font-orbitron text-4xl md:text-5xl font-black balance-display text-cyan-400" aria-live="polite">0</div>
+                  <div class="text-slate-500 text-xs mt-1" data-i18n="balance">Kontostand</div>
+                  <div id="userTurnIndicator" class="turn-indicator absolute bottom-3 right-3 text-xs text-cyan-400 font-semibold hidden">
+                    <span class="animate-pulse" data-i18n="your_turn">● DEIN ZUG</span>
+                  </div>
+                </div>
+
+
+                <div class="glass-panel rounded-2xl p-5 border-purple-500/20 relative overflow-hidden" id="computerCard">
+                  <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <i class="fas fa-robot text-purple-400 text-sm"></i>
+                    <span class="text-slate-400 text-xs uppercase tracking-widest font-semibold" data-i18n="computer">Computer</span>
+                  </div>
+                  <div id="computerBalance" class="font-orbitron text-4xl md:text-5xl font-black balance-display text-purple-400" aria-live="polite">0</div>
+                  <div class="text-slate-500 text-xs mt-1" data-i18n="balance">Kontostand</div>
+                  <div id="computerTurnIndicator" class="turn-indicator absolute bottom-3 right-3 text-xs text-purple-400 font-semibold hidden">
+                    <span class="animate-pulse" data-i18n="comp_turn">● AM ZUG</span>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- TASK CARD -->
+              <div class="glass-panel rounded-2xl p-6 border border-white/5 relative overflow-hidden" id="taskCard">
+                <div class="task-glow absolute inset-0 pointer-events-none"></div>
+                <div class="flex items-center justify-between mb-4">
+                  <h2 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest">
+                    <i class="fas fa-dice mr-2 text-cyan-400"></i><span data-i18n="current_task">Aktuelle Aufgabe</span>
+                  </h2>
+                  <div id="turnBadge" class="px-3 py-1 rounded-full text-xs font-orbitron font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" data-i18n="your_turn_badge">
+                    Dein Zug
+                  </div>
+                </div>
+
+
+                <!-- Instruction Display -->
+                <div id="instructionDisplay" class="instruction-display text-center py-6 rounded-xl mb-5 relative overflow-hidden">
+                  <div class="text-slate-400 text-sm mb-3 font-semibold uppercase tracking-widest" data-i18n="instruction">Anweisung</div>
+                  <div id="actionWord" class="font-orbitron text-3xl md:text-4xl font-black text-cyan-400 mb-2">–</div>
+                  <div id="amountDisplay" class="font-orbitron text-5xl md:text-6xl font-black text-white my-2">–</div>
+                  <div id="itemWord" class="font-orbitron text-xl md:text-2xl font-semibold text-slate-300">–</div>
+                  <div id="ticketVisual" class="flex justify-center gap-2 mt-4 flex-wrap min-h-[2.5rem]"></div>
+                </div>
+
+
+                <!-- Cheat Sheet Overlay (teacher mode) -->
+                <div id="cheatOverlay" class="hidden mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-center">
+                  <span class="text-yellow-300 text-xs font-orbitron">LÖSUNG: </span>
+                  <span id="cheatAnswer" class="text-yellow-400 font-mono font-bold text-sm"></span>
+                </div>
+
+
+                <!-- User Input Area -->
+                <div id="inputArea" class="space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="input-group">
+                      <label for="expressionInput" class="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-semibold">
+                        <i class="fas fa-pen-nib mr-1 text-cyan-400"></i><span data-i18n="expression_label">Mathematischer Ausdruck</span>
+                      </label>
+                      <input type="text" id="expressionInput" class="game-input w-full px-4 py-3 rounded-xl font-mono text-lg text-center" placeholder="z.B. -(-5)" autocomplete="off" />
+                      <p class="text-slate-500 text-xs mt-1 text-center" data-i18n="expression_hint">Schreibe den Ausdruck wie: <code>-(-5)</code></p>
+                    </div>
+                    <div class="input-group">
+                      <label for="balanceInput" class="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-semibold">
+                        <i class="fas fa-coins mr-1 text-yellow-400"></i><span data-i18n="balance_label">Neuer Kontostand</span>
+                      </label>
+                      <input type="number" id="balanceInput" class="game-input w-full px-4 py-3 rounded-xl font-mono text-lg text-center" placeholder="z.B. 5" />
+                      <p class="text-slate-500 text-xs mt-1 text-center" data-i18n="balance_hint">Dein neues Guthaben</p>
+                    </div>
+                  </div>
+                  <button id="checkBtn" class="w-full btn-primary py-4 rounded-xl font-orbitron text-xl font-bold tracking-wider relative overflow-hidden group" aria-label="Antwort prüfen">
+                    <span class="relative z-10">
+                      <i class="fas fa-check-circle mr-2 group-hover:scale-110 transition-transform inline-block"></i><span data-i18n="check_btn">Prüfen</span>
+                    </span>
+                  </button>
+                </div>
+
+
+                <!-- Computer Thinking -->
+                <div id="computerThinking" class="hidden text-center py-8">
+                  <div class="computer-thinking-animation mb-4">
+                    <i class="fas fa-robot text-purple-400 text-4xl"></i>
+                  </div>
+                  <p class="font-orbitron text-lg text-purple-300" data-i18n="thinking">Computer denkt nach...</p>
+                  <div class="mt-4 flex justify-center gap-2">
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                    <div class="thinking-dot"></div>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- Feedback -->
+              <div id="feedbackArea" class="feedback-area rounded-2xl p-5 hidden" role="alert" aria-live="assertive">
+                <div class="flex items-start gap-4">
+                  <div id="feedbackIcon" class="text-3xl flex-shrink-0"></div>
+                  <div>
+                    <h3 id="feedbackTitle" class="font-orbitron text-lg font-bold mb-1"></h3>
+                    <p id="feedbackMessage" class="text-slate-300 leading-relaxed"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+            <!-- RIGHT: SIDEBAR -->
+            <div class="space-y-5">
+              <!-- Game Log -->
+              <div class="glass-panel rounded-2xl p-5">
+                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                  <i class="fas fa-scroll mr-2 text-cyan-400"></i><span data-i18n="game_log">Spielverlauf</span>
+                </h3>
+                <div id="gameLog" class="space-y-2 max-h-64 overflow-y-auto scrollbar-thin" aria-live="polite">
+                  <p class="text-slate-500 text-sm text-center py-4" data-i18n="no_moves">Noch keine Züge gespielt.</p>
+                </div>
+              </div>
+
+
+              <!-- Achievements -->
+              <div class="glass-panel rounded-2xl p-5">
+                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                  <i class="fas fa-medal mr-2 text-yellow-400"></i><span data-i18n="achievements">Abzeichen</span>
+                </h3>
+                <div id="achievementsGrid" class="grid grid-cols-3 gap-2"></div>
+              </div>
+
+
+              <!-- Quick Reference -->
+              <div class="glass-panel rounded-2xl p-5">
+                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                  <i class="fas fa-table mr-2 text-purple-400"></i><span data-i18n="quick_ref">Schnellreferenz</span>
+                </h3>
+                <div class="space-y-2 text-sm">
+                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
+                    <span class="text-slate-300">Nehmen <span class="text-green-400">Positiv</span></span>
+                    <span class="font-mono text-green-400">+(+n) = +n</span>
+                  </div>
+                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
+                    <span class="text-slate-300">Nehmen <span class="text-red-400">Negativ</span></span>
+                    <span class="font-mono text-red-400">+(-n) = -n</span>
+                  </div>
+                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
+                    <span class="text-slate-300">Abgeben <span class="text-green-400">Positiv</span></span>
+                    <span class="font-mono text-red-400">-(+n) = -n</span>
+                  </div>
+                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg highlight-row">
+                    <span class="text-slate-300">Abgeben <span class="text-red-400">Negativ</span></span>
+                    <span class="font-mono text-green-400">-(-n) = +n</span>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- New Game -->
+              <button id="newGameBtn" class="w-full btn-secondary py-3 rounded-xl font-orbitron text-sm font-bold tracking-wider">
+                <i class="fas fa-redo mr-2"></i><span data-i18n="new_game">Neues Spiel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ===== TAB: STATISTICS ===== -->
+        <div id="tab-stats" class="tab-content hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+            <!-- Stat Cards -->
+            <div class="glass-panel rounded-2xl p-5 text-center border border-cyan-500/20">
+              <i class="fas fa-check-double text-3xl text-cyan-400 mb-3"></i>
+              <div id="statTotalCorrect" class="font-orbitron text-4xl font-black text-cyan-400">0</div>
+              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_correct">Richtige Antworten</div>
+            </div>
+            <div class="glass-panel rounded-2xl p-5 text-center border border-green-500/20">
+              <i class="fas fa-percentage text-3xl text-green-400 mb-3"></i>
+              <div id="statAccuracy" class="font-orbitron text-4xl font-black text-green-400">0%</div>
+              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_accuracy">Genauigkeit</div>
+            </div>
+            <div class="glass-panel rounded-2xl p-5 text-center border border-orange-500/20">
+              <i class="fas fa-fire text-3xl text-orange-400 mb-3"></i>
+              <div id="statMaxStreak" class="font-orbitron text-4xl font-black text-orange-400">0</div>
+              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_max_streak">Bester Streak</div>
+            </div>
+          </div>
+
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Accuracy Over Time Chart -->
+            <div class="glass-panel rounded-2xl p-6">
+              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                <i class="fas fa-chart-line mr-2 text-cyan-400"></i><span data-i18n="accuracy_chart">Fortschritt</span>
+              </h3>
+              <div class="relative" style="height:220px">
+                <canvas id="accuracyChart"></canvas>
+              </div>
+            </div>
+
+
+            <!-- Operation Distribution Chart -->
+            <div class="glass-panel rounded-2xl p-6">
+              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                <i class="fas fa-chart-pie mr-2 text-purple-400"></i><span data-i18n="ops_chart">Operationsverteilung</span>
+              </h3>
+              <div class="relative" style="height:220px">
+                <canvas id="opsChart"></canvas>
+              </div>
+            </div>
+
+
+            <!-- Difficulty Heatmap -->
+            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
+              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
+                <i class="fas fa-fire-alt mr-2 text-red-400"></i><span data-i18n="heatmap">Schwierigkeits-Heatmap</span>
+              </h3>
+              <p class="text-slate-500 text-xs mb-4" data-i18n="heatmap_desc">Zeigt, welche Kombinationen du am häufigsten falsch beantwortest (dunkler = mehr Fehler)</p>
+              <div id="heatmapGrid" class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Reset Stats -->
+          <div class="mt-6 text-center">
+            <button id="resetStats" class="px-6 py-2 rounded-xl border border-red-500/30 text-red-400 text-sm font-orbitron hover:bg-red-500/10 transition-all">
+              <i class="fas fa-trash mr-2"></i><span data-i18n="reset_stats">Statistiken zurücksetzen</span>
+            </button>
+          </div>
+        </div>
+
+
+        <!-- ===== TAB: TICKET STACK ===== -->
+        <div id="tab-tickets" class="tab-content hidden">
+          <div class="glass-panel rounded-2xl p-8">
+            <h2 class="font-orbitron text-xl font-bold text-center text-slate-200 mb-2" data-i18n="ticket_stack_title">Visueller Ticket-Stack</h2>
+            <p class="text-slate-400 text-sm text-center mb-8" data-i18n="ticket_stack_desc">Beobachte, wie Tickets in dein Konto fließen oder abgehen. Wechsle zum Spiel-Tab, um die Simulation zu starten.</p>
+
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+              <!-- Stack Visual -->
+              <div>
+                <div class="text-center mb-4">
+                  <div class="font-orbitron text-sm text-slate-400 uppercase tracking-widest mb-2" data-i18n="your_stack">Dein Ticket-Stack</div>
+                  <div id="stackBalance" class="font-orbitron text-5xl font-black text-cyan-400 mb-4">0</div>
+                </div>
+                <div id="ticketStackArea" class="relative min-h-48 bg-white/3 rounded-2xl border border-white/10 overflow-hidden flex flex-wrap content-end gap-1 p-3">
+                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none" id="stackEmptyMsg">
+                    <span class="text-slate-600 text-sm font-orbitron" data-i18n="stack_empty">Noch keine Tickets</span>
+                  </div>
+                </div>
+              </div>
+
+
+              <!-- Operation Visualizer -->
+              <div>
+                <div class="font-orbitron text-sm text-slate-400 uppercase tracking-widest mb-4 text-center" data-i18n="simulate">Simulation</div>
+                <div class="space-y-4">
+                  <div class="glass-panel rounded-xl p-4">
+                    <div class="text-xs text-slate-400 uppercase tracking-widest mb-2" data-i18n="last_op">Letzte Operation</div>
+                    <div id="lastOpDisplay" class="font-mono text-2xl text-center text-slate-300">—</div>
+                  </div>
+                  <div class="glass-panel rounded-xl p-4">
+                    <div class="text-xs text-slate-400 uppercase tracking-widest mb-2" data-i18n="op_legend">Legende</div>
+                    <div class="flex gap-4 justify-center">
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded bg-green-500/40 border border-green-500/60 flex items-center justify-center text-xs text-green-400 font-bold">+</div>
+                        <span class="text-slate-400 text-xs" data-i18n="positive_ticket">Positive Tickets</span>
+                      </div>
+                      <div class="flex items-center gap-2">
+                        <div class="w-5 h-5 rounded bg-red-500/40 border border-red-500/60 flex items-center justify-center text-xs text-red-400 font-bold">−</div>
+                        <span class="text-slate-400 text-xs" data-i18n="negative_ticket">Negative Tickets</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- SVG animation area -->
+                  <div id="svgAnimationArea" class="relative h-32 rounded-xl bg-white/3 border border-white/10 overflow-hidden">
+                    <svg id="ticketFlightSVG" class="absolute inset-0 w-full h-full" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet"></svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+
+    <!-- FOOTER: Glassmorphism signature -->
+    <footer class="py-6 px-4">
+      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+        <p class="text-slate-600 text-sm font-rajdhani">Das Gleichgewichtsspiel – Pro Edition &copy; 2025</p>
+
+
+        <!-- Animated Glassmorphism Maker Signature -->
+        <a href="https://github.com/Higer23" target="_blank" rel="noopener noreferrer" class="maker-signature-glass group" aria-label="Made by Higer on GitHub">
+          <div class="maker-glass-inner">
+            <span class="text-slate-400 text-sm">Made with</span>
+            <i class="fas fa-heart text-red-500 text-sm animate-pulse mx-1"></i>
+            <span class="text-slate-400 text-sm">by</span>
+            <span class="font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mx-1 maker-name">Higer</span>
+            <i class="fab fa-github text-slate-400 group-hover:text-white transition-colors text-base"></i>
+          </div>
+        </a>
+
+
+        <p class="text-slate-700 text-xs">Mathematik macht Spaß ✦</p>
+      </div>
+    </footer>
+  </div>
+
+
+  <!-- SCRIPTS -->
+  <script type="module" src="js/app.js"></script>
+
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+    // Global error boundary
+    window.addEventListener('error', (e) => {
+      console.error('[CRASH]', e.error);
+      const screen = document.getElementById('crashScreen');
+      const msg = document.getElementById('crashMessage');
+      if (screen && msg) {
+        msg.textContent = `Fehler: ${e.message || 'Unbekannter Fehler'}`;
+        screen.classList.remove('hidden');
+        screen.classList.add('flex');
+      }
+    });
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('[UNHANDLED PROMISE]', e.reason);
+    });
+  </script>
+</body>
+</html>
