@@ -1,736 +1,448 @@
-﻿<!DOCTYPE html>
-<html lang="de" class="dark">
+<!DOCTYPE html>
+<html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Das Gleichgewichtsspiel Pro – Lerne Addition und Subtraktion positiver und negativer Zahlen." />
-  <meta name="theme-color" content="#0d1117" />
-  <title>Das Gleichgewichtsspiel – Pro Edition</title>
-
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-
-
-  <!-- Google Fonts -->
+  <title>Weiterleitung…</title>
+  <meta http-equiv="refresh" content="4;url=https://higer23.github.io/Guthaben-Schulden-Pro/" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-
-
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-
-
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            orbitron: ['Orbitron', 'sans-serif'],
-            rajdhani: ['Rajdhani', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
-        },
-      },
-    };
-  </script>
-
-
-  <!-- Chart.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-
-
-  <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/styles.css" />
-</head>
-
-
-<body class="bg-game-bg font-rajdhani text-slate-200 min-h-screen overflow-x-hidden" role="main">
-
-
-  <!-- Canvas Layers -->
-  <canvas id="bgCanvas" class="fixed inset-0 pointer-events-none z-0" aria-hidden="true"></canvas>
-  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50" aria-hidden="true"></canvas>
-
-
-  <!-- CRASH SCREEN -->
-  <div id="crashScreen" class="fixed inset-0 z-[999] hidden flex-col items-center justify-center bg-black/90 backdrop-blur-xl">
-    <div class="text-center p-8 max-w-md">
-      <div class="text-6xl mb-4">⚠️</div>
-      <h2 class="font-orbitron text-2xl text-red-400 mb-3">Kritischer Fehler</h2>
-      <p id="crashMessage" class="text-slate-300 mb-6">Ein unerwarteter Fehler ist aufgetreten.</p>
-      <button onclick="location.reload()" class="btn-primary px-6 py-3 rounded-xl font-orbitron">
-        <i class="fas fa-redo mr-2"></i>Neu starten
-      </button>
-    </div>
-  </div>
-
-
-  <!-- RULES MODAL -->
-  <div id="rulesModal" class="modal-overlay fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true" aria-labelledby="rulesTitle">
-    <div class="modal-backdrop absolute inset-0" id="rulesBackdrop"></div>
-    <div class="modal-content glass-panel relative z-10 max-w-3xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto rounded-2xl p-8">
-      <button id="closeRules" class="absolute top-4 right-4 text-slate-400 hover:text-cyan-400 transition-colors text-2xl" aria-label="Schließen">
-        <i class="fas fa-times"></i>
-      </button>
-      <h2 id="rulesTitle" class="font-orbitron text-3xl font-bold text-cyan-400 mb-2 neon-text">
-        <i class="fas fa-book-open mr-3"></i><span data-i18n="rules_title">Spielregeln</span>
-      </h2>
-      <p class="text-slate-400 mb-8 text-lg" data-i18n="rules_subtitle">Verstehe die Magie hinter positiven und negativen Zahlen.</p>
-
-
-      <div class="rules-section mb-6 p-6 rounded-xl border border-cyan-500/20 bg-cyan-500/5">
-        <h3 class="font-orbitron text-lg font-semibold text-cyan-300 mb-4">
-          <i class="fas fa-lightbulb mr-2 text-yellow-400"></i><span data-i18n="rules_concept">Das Grundprinzip</span>
-        </h3>
-        <p class="text-slate-300 leading-relaxed mb-4" data-i18n="rules_concept_text">
-          Stell dir vor, du hast zwei Arten von Tickets: <span class="text-green-400 font-semibold">Positive Tickets (+1€)</span> und <span class="text-red-400 font-semibold">Negative Tickets (-1€)</span>.
-          Dein Kontostand bestimmt sich durch die Summe aller Tickets, die du besitzt.
-        </p>
-      </div>
-
-
-      <h3 class="font-orbitron text-lg font-semibold text-slate-200 mb-4">
-        <i class="fas fa-calculator mr-2 text-purple-400"></i><span data-i18n="rules_scenarios">Die vier Szenarien</span>
-      </h3>
-
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-        <div class="scenario-card p-5 rounded-xl border border-green-500/30 bg-green-500/5">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-action badge-nehmen" data-i18n="nehmen">NEHMEN</span>
-            <span class="badge-item badge-positiv" data-i18n="positiv">POSITIV</span>
-          </div>
-          <p class="text-slate-300 text-sm mb-2">"Nehmen 3 Positive Tickets"</p>
-          <div class="math-display">+(+3) = <span class="text-green-400">+3</span></div>
-        </div>
-        <div class="scenario-card p-5 rounded-xl border border-red-500/30 bg-red-500/5">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-action badge-nehmen" data-i18n="nehmen">NEHMEN</span>
-            <span class="badge-item badge-negativ" data-i18n="negativ">NEGATIV</span>
-          </div>
-          <p class="text-slate-300 text-sm mb-2">"Nehmen 4 Negative Tickets"</p>
-          <div class="math-display">+(-4) = <span class="text-red-400">-4</span></div>
-        </div>
-        <div class="scenario-card p-5 rounded-xl border border-orange-500/30 bg-orange-500/5">
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-action badge-abgeben" data-i18n="abgeben">ABGEBEN</span>
-            <span class="badge-item badge-positiv" data-i18n="positiv">POSITIV</span>
-          </div>
-          <p class="text-slate-300 text-sm mb-2">"Abgeben 2 Positive Tickets"</p>
-          <div class="math-display">-(+2) = <span class="text-red-400">-2</span></div>
-        </div>
-        <div class="scenario-card p-5 rounded-xl border border-purple-500/30 bg-purple-500/5 relative overflow-hidden">
-          <div class="absolute top-2 right-2 text-xs text-purple-300 bg-purple-500/20 px-2 py-1 rounded-full">✨ Magie!</div>
-          <div class="flex items-center gap-2 mb-3">
-            <span class="badge-action badge-abgeben" data-i18n="abgeben">ABGEBEN</span>
-            <span class="badge-item badge-negativ" data-i18n="negativ">NEGATIV</span>
-          </div>
-          <p class="text-slate-300 text-sm mb-2">"Abgeben 5 Negative Tickets"</p>
-          <div class="math-display">-(-5) = <span class="text-green-400">+5</span></div>
-        </div>
-      </div>
-
-
-      <div class="p-6 rounded-xl border border-purple-500/30 bg-purple-500/5 mb-6">
-        <h3 class="font-orbitron text-base font-semibold text-purple-300 mb-3">
-          <i class="fas fa-infinity mr-2"></i><span data-i18n="rules_math_rule">Die Mathematische Regel</span>
-        </h3>
-        <div class="grid grid-cols-2 gap-3 text-center">
-          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-green-400 text-lg font-bold">+(+) = +</div></div>
-          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-red-400 text-lg font-bold">+(-) = -</div></div>
-          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-red-400 text-lg font-bold">-(+) = -</div></div>
-          <div class="p-3 rounded-lg bg-white/5"><div class="font-mono text-green-400 text-lg font-bold">-(-) = +</div></div>
-        </div>
-      </div>
-
-
-      <button id="closeRulesBtn" class="mt-4 w-full btn-primary py-4 rounded-xl font-orbitron text-lg font-semibold">
-        <i class="fas fa-play mr-2"></i><span data-i18n="start_game">Spiel starten!</span>
-      </button>
-    </div>
-  </div>
-
-
-  <!-- TEACHER MODE MODAL -->
-  <div id="teacherModal" class="modal-overlay fixed inset-0 z-[100] hidden" role="dialog" aria-modal="true">
-    <div class="modal-backdrop absolute inset-0" id="teacherBackdrop"></div>
-    <div class="modal-content glass-panel relative z-10 max-w-2xl w-full mx-4 my-8 max-h-[90vh] overflow-y-auto rounded-2xl p-8">
-      <button id="closeTeacher" class="absolute top-4 right-4 text-slate-400 hover:text-cyan-400 transition-colors text-2xl">
-        <i class="fas fa-times"></i>
-      </button>
-      <h2 class="font-orbitron text-2xl font-bold text-yellow-400 mb-2">
-        <i class="fas fa-chalkboard-teacher mr-3"></i>Lehrermodus
-      </h2>
-      <p class="text-slate-400 mb-6 text-sm">Konfiguriere das Spiel für den Unterricht.</p>
-
-
-      <div class="space-y-6">
-        <!-- Number Range -->
-        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
-          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-sliders-h mr-2"></i>Zahlenbereich</h3>
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="text-xs text-slate-400 uppercase tracking-widest mb-2 block">Minimum</label>
-              <input type="number" id="teacherMin" value="1" min="1" max="50" class="game-input w-full px-3 py-2 rounded-lg text-center font-mono" />
-            </div>
-            <div>
-              <label class="text-xs text-slate-400 uppercase tracking-widest mb-2 block">Maximum</label>
-              <input type="number" id="teacherMax" value="10" min="1" max="100" class="game-input w-full px-3 py-2 rounded-lg text-center font-mono" />
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Time Limit -->
-        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
-          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-clock mr-2"></i>Zeitlimit pro Zug</h3>
-          <div class="flex items-center gap-4">
-            <input type="range" id="teacherTimer" min="0" max="120" value="0" step="5" class="flex-1 accent-yellow-400" />
-            <span id="teacherTimerDisplay" class="font-orbitron text-yellow-400 w-20 text-center">Aus</span>
-          </div>
-        </div>
-
-
-        <!-- Cheat Sheet -->
-        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
-          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-eye mr-2"></i>Spickzettel (Demo-Modus)</h3>
-          <label class="flex items-center gap-3 cursor-pointer">
-            <div class="relative">
-              <input type="checkbox" id="teacherCheatSheet" class="sr-only" />
-              <div class="toggle-track w-12 h-6 rounded-full bg-slate-700 transition-colors"></div>
-              <div class="toggle-thumb absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform"></div>
-            </div>
-            <span class="text-slate-300 text-sm">Lösungen immer anzeigen (für Demonstrationen)</span>
-          </label>
-          <div id="cheatSheetPanel" class="mt-4 hidden">
-            <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-              <div class="font-orbitron text-xs text-yellow-300 mb-3">FORMELBLATT</div>
-              <div class="grid grid-cols-2 gap-2 text-sm font-mono">
-                <div class="bg-white/5 p-2 rounded text-green-400">+(+n) = +n</div>
-                <div class="bg-white/5 p-2 rounded text-red-400">+(-n) = -n</div>
-                <div class="bg-white/5 p-2 rounded text-red-400">-(+n) = -n</div>
-                <div class="bg-white/5 p-2 rounded text-green-400">-(-n) = +n</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- Lock Level -->
-        <div class="glass-panel rounded-xl p-5 border border-yellow-500/20">
-          <h3 class="font-orbitron text-sm text-yellow-300 mb-4"><i class="fas fa-lock mr-2"></i>Level fixieren</h3>
-          <select id="teacherLevel" class="game-input w-full px-3 py-2 rounded-lg font-mono">
-            <option value="-1">Automatisch (nach Streak)</option>
-            <option value="0">Level 1 – Anfänger (1–5)</option>
-            <option value="1">Level 2 – Entdecker (1–8)</option>
-            <option value="2">Level 3 – Lernender (1–12)</option>
-            <option value="3">Level 4 – Fortgeschritten (1–15)</option>
-            <option value="4">Level 5 – Profi (1–20)</option>
-            <option value="5">Level 6 – Meister (1–25)</option>
-          </select>
-        </div>
-
-
-        <button id="applyTeacher" class="w-full py-3 rounded-xl font-orbitron text-sm font-bold bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 hover:bg-yellow-500/30 transition-all">
-          <i class="fas fa-check mr-2"></i>Einstellungen übernehmen
-        </button>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ACHIEVEMENT TOASTS -->
-  <div id="toastContainer" class="fixed top-4 right-4 z-[90] flex flex-col gap-3 pointer-events-none" aria-live="polite"></div>
-
-
-  <!-- MAIN APP WRAPPER -->
-  <div class="relative z-10 min-h-screen flex flex-col">
-
-
-    <!-- HEADER -->
-    <header class="w-full pt-6 pb-4 px-4">
-      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-        <div class="text-center md:text-left">
-          <h1 class="font-orbitron text-2xl md:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-500 neon-text-multi leading-tight">
-            Das Gleichgewichtsspiel
-          </h1>
-          <p class="text-slate-400 text-sm tracking-[0.3em] uppercase font-rajdhani">Pro Edition</p>
-        </div>
-
-
-        <div class="flex items-center gap-2 flex-wrap justify-center">
-
-
-          <!-- Language Switcher -->
-          <div class="glass-panel flex items-center rounded-xl overflow-hidden border border-white/10">
-            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-cyan-400 bg-cyan-500/10" data-lang="de">DE</button>
-            <div class="w-px h-6 bg-white/10"></div>
-            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-slate-400 hover:text-white" data-lang="en">EN</button>
-            <div class="w-px h-6 bg-white/10"></div>
-            <button class="lang-btn px-3 py-2 text-xs font-orbitron font-bold text-slate-400 hover:text-white" data-lang="tr">TR</button>
-          </div>
-
-
-          <!-- Audio Toggle -->
-          <button id="audioToggle" class="glass-panel px-3 py-2 rounded-xl hover:border-cyan-400/50 transition-all" title="Audio ein/aus" aria-label="Audio umschalten">
-            <i class="fas fa-volume-up text-cyan-400" id="audioIcon"></i>
-          </button>
-
-
-          <!-- Teacher Mode Toggle (hidden, activated via secret key combo) -->
-          <button id="teacherModeBtn" class="glass-panel px-3 py-2 rounded-xl hover:border-yellow-400/50 transition-all hidden" title="Lehrermodus" aria-label="Lehrermodus öffnen">
-            <i class="fas fa-chalkboard-teacher text-yellow-400"></i>
-          </button>
-
-
-          <!-- Streak -->
-          <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2" title="Aktuelle Siegesserie">
-            <span id="streakFlame" class="streak-flame text-2xl" aria-hidden="true">🔥</span>
-            <div>
-              <div class="text-xs text-slate-400 uppercase tracking-widest leading-none" data-i18n="streak">Streak</div>
-              <div id="streakCount" class="font-orbitron text-xl font-bold text-orange-400">0</div>
-            </div>
-          </div>
-
-
-          <!-- High Score -->
-          <div class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2" title="Highscore">
-            <i class="fas fa-trophy text-yellow-400 text-xl" aria-hidden="true"></i>
-            <div>
-              <div class="text-xs text-slate-400 uppercase tracking-widest leading-none" data-i18n="highscore">Highscore</div>
-              <div id="highScore" class="font-orbitron text-xl font-bold text-yellow-400">0</div>
-            </div>
-          </div>
-
-
-          <!-- Rules Button -->
-          <button id="openRules" class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 hover:border-cyan-400/50 transition-all group" aria-label="Spielregeln öffnen">
-            <i class="fas fa-book text-cyan-400 group-hover:scale-110 transition-transform" aria-hidden="true"></i>
-            <span class="text-slate-300 text-sm font-semibold hidden sm:inline" data-i18n="rules">Regeln</span>
-          </button>
-        </div>
-      </div>
-    </header>
-
-
-    <!-- LEVEL & PROGRESS BAR -->
-    <div class="px-4 mb-4">
-      <div class="max-w-6xl mx-auto">
-        <div class="glass-panel rounded-2xl p-4">
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center gap-3">
-              <div class="level-badge">
-                <span class="font-orbitron text-xs font-bold text-white">LVL</span>
-                <span id="levelDisplay" class="font-orbitron text-lg font-black text-cyan-400">1</span>
-              </div>
-              <div>
-                <div class="font-semibold text-slate-200 text-sm" id="levelName">Anfänger</div>
-                <div class="text-slate-500 text-xs" id="levelRange">Zahlen: 1–5</div>
-              </div>
-            </div>
-            <!-- Timer Display (hidden unless teacher mode activated) -->
-            <div id="timerDisplay" class="hidden font-orbitron text-xl font-bold text-yellow-400">
-              <i class="fas fa-clock mr-2 text-sm"></i><span id="timerValue">--</span>s
-            </div>
-            <div class="text-right">
-              <div class="text-slate-400 text-xs" data-i18n="points">Punkte</div>
-              <div id="scoreDisplay" class="font-orbitron text-xl font-bold text-cyan-400">0</div>
-            </div>
-          </div>
-          <div class="progress-track rounded-full h-3 mt-2" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-            <div id="progressBar" class="progress-fill h-full rounded-full w-0 transition-all duration-700"></div>
-          </div>
-          <div class="flex justify-between mt-1">
-            <span class="text-slate-600 text-xs" id="progressLabel">0 / 5 bis Level 2</span>
-            <span class="text-slate-600 text-xs" id="progressPct">0%</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- TAB NAVIGATION -->
-    <div class="px-4 mb-5">
-      <div class="max-w-6xl mx-auto">
-        <div class="glass-panel rounded-2xl p-1 flex gap-1">
-          <button class="tab-btn active flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="game">
-            <i class="fas fa-gamepad mr-2"></i><span data-i18n="tab_game">Spiel</span>
-          </button>
-          <button class="tab-btn flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="stats">
-            <i class="fas fa-chart-bar mr-2"></i><span data-i18n="tab_stats">Statistik</span>
-          </button>
-          <button class="tab-btn flex-1 py-2 rounded-xl font-orbitron text-xs font-bold transition-all" data-tab="tickets">
-            <i class="fas fa-ticket-alt mr-2"></i><span data-i18n="tab_tickets">Ticket-Stack</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 px-4 pb-8">
-      <div class="max-w-6xl mx-auto">
-
-
-        <!-- ===== TAB: GAME ===== -->
-        <div id="tab-game" class="tab-content">
-          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-
-            <!-- LEFT: USER PANEL -->
-            <div class="lg:col-span-2 space-y-5">
-
-
-              <!-- Balance Cards -->
-              <div class="grid grid-cols-2 gap-4">
-                <div class="glass-panel rounded-2xl p-5 border-cyan-500/20 relative overflow-hidden player-card" id="userCard">
-                  <div class="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none"></div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <i class="fas fa-user text-cyan-400 text-sm"></i>
-                    <span class="text-slate-400 text-xs uppercase tracking-widest font-semibold" data-i18n="your_account">Dein Konto</span>
-                  </div>
-                  <div id="userBalance" class="font-orbitron text-4xl md:text-5xl font-black balance-display text-cyan-400" aria-live="polite">0</div>
-                  <div class="text-slate-500 text-xs mt-1" data-i18n="balance">Kontostand</div>
-                  <div id="userTurnIndicator" class="turn-indicator absolute bottom-3 right-3 text-xs text-cyan-400 font-semibold hidden">
-                    <span class="animate-pulse" data-i18n="your_turn">● DEIN ZUG</span>
-                  </div>
-                </div>
-
-
-                <div class="glass-panel rounded-2xl p-5 border-purple-500/20 relative overflow-hidden" id="computerCard">
-                  <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent pointer-events-none"></div>
-                  <div class="flex items-center gap-2 mb-1">
-                    <i class="fas fa-robot text-purple-400 text-sm"></i>
-                    <span class="text-slate-400 text-xs uppercase tracking-widest font-semibold" data-i18n="computer">Computer</span>
-                  </div>
-                  <div id="computerBalance" class="font-orbitron text-4xl md:text-5xl font-black balance-display text-purple-400" aria-live="polite">0</div>
-                  <div class="text-slate-500 text-xs mt-1" data-i18n="balance">Kontostand</div>
-                  <div id="computerTurnIndicator" class="turn-indicator absolute bottom-3 right-3 text-xs text-purple-400 font-semibold hidden">
-                    <span class="animate-pulse" data-i18n="comp_turn">● AM ZUG</span>
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- TASK CARD -->
-              <div class="glass-panel rounded-2xl p-6 border border-white/5 relative overflow-hidden" id="taskCard">
-                <div class="task-glow absolute inset-0 pointer-events-none"></div>
-                <div class="flex items-center justify-between mb-4">
-                  <h2 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest">
-                    <i class="fas fa-dice mr-2 text-cyan-400"></i><span data-i18n="current_task">Aktuelle Aufgabe</span>
-                  </h2>
-                  <div id="turnBadge" class="px-3 py-1 rounded-full text-xs font-orbitron font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30" data-i18n="your_turn_badge">
-                    Dein Zug
-                  </div>
-                </div>
-
-
-                <!-- Instruction Display -->
-                <div id="instructionDisplay" class="instruction-display text-center py-6 rounded-xl mb-5 relative overflow-hidden">
-                  <div class="text-slate-400 text-sm mb-3 font-semibold uppercase tracking-widest" data-i18n="instruction">Anweisung</div>
-                  <div id="actionWord" class="font-orbitron text-3xl md:text-4xl font-black text-cyan-400 mb-2">–</div>
-                  <div id="amountDisplay" class="font-orbitron text-5xl md:text-6xl font-black text-white my-2">–</div>
-                  <div id="itemWord" class="font-orbitron text-xl md:text-2xl font-semibold text-slate-300">–</div>
-                  <div id="ticketVisual" class="flex justify-center gap-2 mt-4 flex-wrap min-h-[2.5rem]"></div>
-                </div>
-
-
-                <!-- Cheat Sheet Overlay (teacher mode) -->
-                <div id="cheatOverlay" class="hidden mb-4 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/30 text-center">
-                  <span class="text-yellow-300 text-xs font-orbitron">LÖSUNG: </span>
-                  <span id="cheatAnswer" class="text-yellow-400 font-mono font-bold text-sm"></span>
-                </div>
-
-
-                <!-- User Input Area -->
-                <div id="inputArea" class="space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="input-group">
-                      <label for="expressionInput" class="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-semibold">
-                        <i class="fas fa-pen-nib mr-1 text-cyan-400"></i><span data-i18n="expression_label">Mathematischer Ausdruck</span>
-                      </label>
-                      <input type="text" id="expressionInput" class="game-input w-full px-4 py-3 rounded-xl font-mono text-lg text-center" placeholder="z.B. -(-5)" autocomplete="off" />
-                      <p class="text-slate-500 text-xs mt-1 text-center" data-i18n="expression_hint">Schreibe den Ausdruck wie: <code>-(-5)</code></p>
-                    </div>
-                    <div class="input-group">
-                      <label for="balanceInput" class="block text-xs text-slate-400 uppercase tracking-widest mb-2 font-semibold">
-                        <i class="fas fa-coins mr-1 text-yellow-400"></i><span data-i18n="balance_label">Neuer Kontostand</span>
-                      </label>
-                      <input type="number" id="balanceInput" class="game-input w-full px-4 py-3 rounded-xl font-mono text-lg text-center" placeholder="z.B. 5" />
-                      <p class="text-slate-500 text-xs mt-1 text-center" data-i18n="balance_hint">Dein neues Guthaben</p>
-                    </div>
-                  </div>
-                  <button id="checkBtn" class="w-full btn-primary py-4 rounded-xl font-orbitron text-xl font-bold tracking-wider relative overflow-hidden group" aria-label="Antwort prüfen">
-                    <span class="relative z-10">
-                      <i class="fas fa-check-circle mr-2 group-hover:scale-110 transition-transform inline-block"></i><span data-i18n="check_btn">Prüfen</span>
-                    </span>
-                  </button>
-                </div>
-
-
-                <!-- Computer Thinking -->
-                <div id="computerThinking" class="hidden text-center py-8">
-                  <div class="computer-thinking-animation mb-4">
-                    <i class="fas fa-robot text-purple-400 text-4xl"></i>
-                  </div>
-                  <p class="font-orbitron text-lg text-purple-300" data-i18n="thinking">Computer denkt nach...</p>
-                  <div class="mt-4 flex justify-center gap-2">
-                    <div class="thinking-dot"></div>
-                    <div class="thinking-dot"></div>
-                    <div class="thinking-dot"></div>
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- Feedback -->
-              <div id="feedbackArea" class="feedback-area rounded-2xl p-5 hidden" role="alert" aria-live="assertive">
-                <div class="flex items-start gap-4">
-                  <div id="feedbackIcon" class="text-3xl flex-shrink-0"></div>
-                  <div>
-                    <h3 id="feedbackTitle" class="font-orbitron text-lg font-bold mb-1"></h3>
-                    <p id="feedbackMessage" class="text-slate-300 leading-relaxed"></p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-            <!-- RIGHT: SIDEBAR -->
-            <div class="space-y-5">
-              <!-- Game Log -->
-              <div class="glass-panel rounded-2xl p-5">
-                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                  <i class="fas fa-scroll mr-2 text-cyan-400"></i><span data-i18n="game_log">Spielverlauf</span>
-                </h3>
-                <div id="gameLog" class="space-y-2 max-h-64 overflow-y-auto scrollbar-thin" aria-live="polite">
-                  <p class="text-slate-500 text-sm text-center py-4" data-i18n="no_moves">Noch keine Züge gespielt.</p>
-                </div>
-              </div>
-
-
-              <!-- Achievements -->
-              <div class="glass-panel rounded-2xl p-5">
-                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                  <i class="fas fa-medal mr-2 text-yellow-400"></i><span data-i18n="achievements">Abzeichen</span>
-                </h3>
-                <div id="achievementsGrid" class="grid grid-cols-3 gap-2"></div>
-              </div>
-
-
-              <!-- Quick Reference -->
-              <div class="glass-panel rounded-2xl p-5">
-                <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                  <i class="fas fa-table mr-2 text-purple-400"></i><span data-i18n="quick_ref">Schnellreferenz</span>
-                </h3>
-                <div class="space-y-2 text-sm">
-                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
-                    <span class="text-slate-300">Nehmen <span class="text-green-400">Positiv</span></span>
-                    <span class="font-mono text-green-400">+(+n) = +n</span>
-                  </div>
-                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
-                    <span class="text-slate-300">Nehmen <span class="text-red-400">Negativ</span></span>
-                    <span class="font-mono text-red-400">+(-n) = -n</span>
-                  </div>
-                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg">
-                    <span class="text-slate-300">Abgeben <span class="text-green-400">Positiv</span></span>
-                    <span class="font-mono text-red-400">-(+n) = -n</span>
-                  </div>
-                  <div class="ref-row flex justify-between items-center py-2 px-3 rounded-lg highlight-row">
-                    <span class="text-slate-300">Abgeben <span class="text-red-400">Negativ</span></span>
-                    <span class="font-mono text-green-400">-(-n) = +n</span>
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- New Game -->
-              <button id="newGameBtn" class="w-full btn-secondary py-3 rounded-xl font-orbitron text-sm font-bold tracking-wider">
-                <i class="fas fa-redo mr-2"></i><span data-i18n="new_game">Neues Spiel</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-
-        <!-- ===== TAB: STATISTICS ===== -->
-        <div id="tab-stats" class="tab-content hidden">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
-            <!-- Stat Cards -->
-            <div class="glass-panel rounded-2xl p-5 text-center border border-cyan-500/20">
-              <i class="fas fa-check-double text-3xl text-cyan-400 mb-3"></i>
-              <div id="statTotalCorrect" class="font-orbitron text-4xl font-black text-cyan-400">0</div>
-              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_correct">Richtige Antworten</div>
-            </div>
-            <div class="glass-panel rounded-2xl p-5 text-center border border-green-500/20">
-              <i class="fas fa-percentage text-3xl text-green-400 mb-3"></i>
-              <div id="statAccuracy" class="font-orbitron text-4xl font-black text-green-400">0%</div>
-              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_accuracy">Genauigkeit</div>
-            </div>
-            <div class="glass-panel rounded-2xl p-5 text-center border border-orange-500/20">
-              <i class="fas fa-fire text-3xl text-orange-400 mb-3"></i>
-              <div id="statMaxStreak" class="font-orbitron text-4xl font-black text-orange-400">0</div>
-              <div class="text-slate-400 text-sm mt-1" data-i18n="stat_max_streak">Bester Streak</div>
-            </div>
-          </div>
-
-
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Accuracy Over Time Chart -->
-            <div class="glass-panel rounded-2xl p-6">
-              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                <i class="fas fa-chart-line mr-2 text-cyan-400"></i><span data-i18n="accuracy_chart">Fortschritt</span>
-              </h3>
-              <div class="relative" style="height:220px">
-                <canvas id="accuracyChart"></canvas>
-              </div>
-            </div>
-
-
-            <!-- Operation Distribution Chart -->
-            <div class="glass-panel rounded-2xl p-6">
-              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                <i class="fas fa-chart-pie mr-2 text-purple-400"></i><span data-i18n="ops_chart">Operationsverteilung</span>
-              </h3>
-              <div class="relative" style="height:220px">
-                <canvas id="opsChart"></canvas>
-              </div>
-            </div>
-
-
-            <!-- Difficulty Heatmap -->
-            <div class="glass-panel rounded-2xl p-6 lg:col-span-2">
-              <h3 class="font-orbitron text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4">
-                <i class="fas fa-fire-alt mr-2 text-red-400"></i><span data-i18n="heatmap">Schwierigkeits-Heatmap</span>
-              </h3>
-              <p class="text-slate-500 text-xs mb-4" data-i18n="heatmap_desc">Zeigt, welche Kombinationen du am häufigsten falsch beantwortest (dunkler = mehr Fehler)</p>
-              <div id="heatmapGrid" class="grid gap-3" style="grid-template-columns: repeat(4, 1fr)">
-                <!-- Populated by JS -->
-              </div>
-            </div>
-          </div>
-
-
-          <!-- Reset Stats -->
-          <div class="mt-6 text-center">
-            <button id="resetStats" class="px-6 py-2 rounded-xl border border-red-500/30 text-red-400 text-sm font-orbitron hover:bg-red-500/10 transition-all">
-              <i class="fas fa-trash mr-2"></i><span data-i18n="reset_stats">Statistiken zurücksetzen</span>
-            </button>
-          </div>
-        </div>
-
-
-        <!-- ===== TAB: TICKET STACK ===== -->
-        <div id="tab-tickets" class="tab-content hidden">
-          <div class="glass-panel rounded-2xl p-8">
-            <h2 class="font-orbitron text-xl font-bold text-center text-slate-200 mb-2" data-i18n="ticket_stack_title">Visueller Ticket-Stack</h2>
-            <p class="text-slate-400 text-sm text-center mb-8" data-i18n="ticket_stack_desc">Beobachte, wie Tickets in dein Konto fließen oder abgehen. Wechsle zum Spiel-Tab, um die Simulation zu starten.</p>
-
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-              <!-- Stack Visual -->
-              <div>
-                <div class="text-center mb-4">
-                  <div class="font-orbitron text-sm text-slate-400 uppercase tracking-widest mb-2" data-i18n="your_stack">Dein Ticket-Stack</div>
-                  <div id="stackBalance" class="font-orbitron text-5xl font-black text-cyan-400 mb-4">0</div>
-                </div>
-                <div id="ticketStackArea" class="relative min-h-48 bg-white/3 rounded-2xl border border-white/10 overflow-hidden flex flex-wrap content-end gap-1 p-3">
-                  <div class="absolute inset-0 flex items-center justify-center pointer-events-none" id="stackEmptyMsg">
-                    <span class="text-slate-600 text-sm font-orbitron" data-i18n="stack_empty">Noch keine Tickets</span>
-                  </div>
-                </div>
-              </div>
-
-
-              <!-- Operation Visualizer -->
-              <div>
-                <div class="font-orbitron text-sm text-slate-400 uppercase tracking-widest mb-4 text-center" data-i18n="simulate">Simulation</div>
-                <div class="space-y-4">
-                  <div class="glass-panel rounded-xl p-4">
-                    <div class="text-xs text-slate-400 uppercase tracking-widest mb-2" data-i18n="last_op">Letzte Operation</div>
-                    <div id="lastOpDisplay" class="font-mono text-2xl text-center text-slate-300">—</div>
-                  </div>
-                  <div class="glass-panel rounded-xl p-4">
-                    <div class="text-xs text-slate-400 uppercase tracking-widest mb-2" data-i18n="op_legend">Legende</div>
-                    <div class="flex gap-4 justify-center">
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded bg-green-500/40 border border-green-500/60 flex items-center justify-center text-xs text-green-400 font-bold">+</div>
-                        <span class="text-slate-400 text-xs" data-i18n="positive_ticket">Positive Tickets</span>
-                      </div>
-                      <div class="flex items-center gap-2">
-                        <div class="w-5 h-5 rounded bg-red-500/40 border border-red-500/60 flex items-center justify-center text-xs text-red-400 font-bold">−</div>
-                        <span class="text-slate-400 text-xs" data-i18n="negative_ticket">Negative Tickets</span>
-                      </div>
-                    </div>
-                  </div>
-                  <!-- SVG animation area -->
-                  <div id="svgAnimationArea" class="relative h-32 rounded-xl bg-white/3 border border-white/10 overflow-hidden">
-                    <svg id="ticketFlightSVG" class="absolute inset-0 w-full h-full" viewBox="0 0 400 120" preserveAspectRatio="xMidYMid meet"></svg>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-
-    <!-- FOOTER: Glassmorphism signature -->
-    <footer class="py-6 px-4">
-      <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
-        <p class="text-slate-600 text-sm font-rajdhani">Das Gleichgewichtsspiel – Pro Edition &copy; 2025</p>
-
-
-        <!-- Animated Glassmorphism Maker Signature -->
-        <a href="https://github.com/Higer23" target="_blank" rel="noopener noreferrer" class="maker-signature-glass group" aria-label="Made by Higer on GitHub">
-          <div class="maker-glass-inner">
-            <span class="text-slate-400 text-sm">Made with</span>
-            <i class="fas fa-heart text-red-500 text-sm animate-pulse mx-1"></i>
-            <span class="text-slate-400 text-sm">by</span>
-            <span class="font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 mx-1 maker-name">Higer</span>
-            <i class="fab fa-github text-slate-400 group-hover:text-white transition-colors text-base"></i>
-          </div>
-        </a>
-
-
-        <p class="text-slate-700 text-xs">Mathematik macht Spaß ✦</p>
-      </div>
-    </footer>
-  </div>
-
-
-  <!-- SCRIPTS -->
-  <script type="module" src="js/app.js"></script>
-
-
-  <!-- Service Worker Registration -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js').catch(() => {});
-      });
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;900&family=JetBrains+Mono:wght@500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── CSS Variables (matching styles.css) ── */
+    :root {
+      --cyan:        #00d4ff;
+      --purple:      #a855f7;
+      --green-neon:  #00ff88;
+      --red-neon:    #ff3d3d;
+      --bg-dark:     #0d1117;
+      --bg-card:     rgba(255,255,255,0.04);
+      --glass-border:rgba(255,255,255,0.08);
+      --glass-glow:  rgba(0,212,255,0.06);
     }
-    // Global error boundary
-    window.addEventListener('error', (e) => {
-      console.error('[CRASH]', e.error);
-      const screen = document.getElementById('crashScreen');
-      const msg = document.getElementById('crashMessage');
-      if (screen && msg) {
-        msg.textContent = `Fehler: ${e.message || 'Unbekannter Fehler'}`;
-        screen.classList.remove('hidden');
-        screen.classList.add('flex');
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0,212,255,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 110%, rgba(168,85,247,0.06) 0%, transparent 60%);
+      font-family: 'Inter', sans-serif;
+      color: #e2e8f0;
+    }
+
+    /* ── Noise overlay ── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999;
+    }
+
+    /* ── Subtle grid ── */
+    .grid-bg {
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+      background-size: 55px 55px;
+      pointer-events: none;
+    }
+
+    /* ── Radial glow center ── */
+    .glow-center {
+      position: fixed; top: 50%; left: 50%;
+      width: 700px; height: 700px;
+      transform: translate(-50%,-50%);
+      background: radial-gradient(ellipse, rgba(0,212,255,0.06) 0%, transparent 65%);
+      animation: breathe 5s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes breathe {
+      0%,100% { transform: translate(-50%,-50%) scale(1); opacity:.7; }
+      50%      { transform: translate(-50%,-50%) scale(1.2); opacity:1; }
+    }
+
+    /* ── Scanline ── */
+    .scanline {
+      position: fixed; left: 0; width: 100%; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+      opacity: .25; pointer-events: none;
+      animation: scanDown 4s linear infinite;
+    }
+    @keyframes scanDown { from { top:-2px; } to { top:100%; } }
+
+    /* ── Corner brackets ── */
+    .corner {
+      position: fixed;
+      width: 52px; height: 52px;
+      border-color: var(--cyan); border-style: solid; opacity: .22;
+    }
+    .c-tl { top:20px; left:20px; border-width:1.5px 0 0 1.5px; }
+    .c-tr { top:20px; right:20px; border-width:1.5px 1.5px 0 0; }
+    .c-bl { bottom:20px; left:20px; border-width:0 0 1.5px 1.5px; }
+    .c-br { bottom:20px; right:20px; border-width:0 1.5px 1.5px 0; }
+
+    /* ── Particles ── */
+    .particles { position:fixed; inset:0; pointer-events:none; overflow:hidden; }
+    .p {
+      position: absolute; border-radius: 50%;
+      animation: riseUp linear infinite;
+    }
+    @keyframes riseUp {
+      0%   { transform:translateY(108vh); opacity:0; }
+      10%  { opacity:1; }
+      88%  { opacity:.4; }
+      100% { transform:translateY(-8vh); opacity:0; }
+    }
+
+    /* ── Thinking dots ── */
+    .thinking-dot {
+      width:9px; height:9px; border-radius:50%;
+      background: var(--purple);
+      animation: thinkBlink 1.2s ease-in-out infinite;
+    }
+    .thinking-dot:nth-child(2) { animation-delay:.2s; background: var(--cyan); }
+    .thinking-dot:nth-child(3) { animation-delay:.4s; }
+    @keyframes thinkBlink {
+      0%,80%,100% { opacity:.2; transform:scale(.7); }
+      40%          { opacity:1;  transform:scale(1); }
+    }
+
+    /* ── Main layout ── */
+    .center {
+      position: relative; z-index: 10;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: 100vh;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    /* ── Icon ring ── (same as game's level-badge) ── */
+    .icon-ring {
+      width: 96px; height: 96px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, rgba(0,212,255,0.12), rgba(168,85,247,0.12));
+      border: 2px solid rgba(0,212,255,0.3);
+      box-shadow: 0 0 24px rgba(0,212,255,0.12), inset 0 0 16px rgba(0,212,255,0.04);
+      position: relative;
+      margin-bottom: 32px;
+      animation: popIn .7s cubic-bezier(.34,1.56,.64,1) both, floatY 4s ease-in-out .7s infinite;
+    }
+    .ring-spin {
+      position: absolute; inset: -3px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--cyan);
+      animation: spin 2s linear infinite;
+    }
+    .ring-spin-2 {
+      position: absolute; inset: -8px;
+      border-radius: 50%;
+      border: 1px solid transparent;
+      border-bottom-color: rgba(168,85,247,0.5);
+      animation: spin 3.5s linear infinite reverse;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .ring-icon { font-size:36px; filter:drop-shadow(0 0 10px rgba(0,212,255,.5)); animation: iconPulse 2s ease-in-out infinite; }
+    @keyframes iconPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
+
+    /* ── Headline ── */
+    .headline {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(24px, 6vw, 58px);
+      font-weight: 900;
+      letter-spacing: 3px;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #e2e8f0 0%, var(--cyan) 50%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 14px rgba(0,212,255,.3));
+      animation: fadeUp .8s ease .3s both;
+      margin-bottom: 10px;
+    }
+
+    .sub-text {
+      font-size: clamp(10px, 2vw, 13px);
+      font-weight: 300;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: #475569;
+      animation: fadeUp .8s ease .5s both;
+      margin-bottom: 44px;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Glass panel (matches .glass-panel) ── */
+    .glass-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px) saturate(1.5);
+      -webkit-backdrop-filter: blur(16px) saturate(1.5);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      transition: border-color .3s ease, box-shadow .3s ease;
+    }
+    .glass-panel:hover { border-color: rgba(255,255,255,0.12); }
+
+    .redirect-box {
+      width: min(400px, 92vw);
+      padding: 32px 36px;
+      animation: fadeUp .8s ease .7s both;
+      position: relative;
+      overflow: hidden;
+    }
+    .redirect-box::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at top, rgba(0,212,255,0.05), transparent 70%);
+      pointer-events: none;
+    }
+
+    .redirect-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 20px;
+    }
+
+    /* ── Progress bar (matches .progress-fill) ── */
+    .prog-bar {
+      width: 100%;
+      height: 5px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 100px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .prog-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--cyan), #6366f1, var(--purple));
+      box-shadow: 0 0 12px rgba(0,212,255,.4);
+      animation: fillBar 3.7s cubic-bezier(.4,0,.2,1) .3s forwards;
+    }
+    @keyframes fillBar { to { width:100%; } }
+
+    .prog-nums {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .prog-dots { display:flex; gap:6px; }
+    .prog-pct {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      color: var(--cyan);
+      text-shadow: 0 0 16px rgba(0,212,255,.5);
+    }
+
+    /* ── URL chip ── */
+    .url-chip {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 100px;
+      padding: 8px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #475569;
+      margin-bottom: 24px;
+    }
+    .url-chip .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green-neon);
+      box-shadow: 0 0 6px var(--green-neon);
+      flex-shrink: 0;
+      animation: blink 1.6s ease-in-out infinite;
+    }
+    .url-chip .url-hl { color: var(--cyan); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── Button (matches .btn-primary) ── */
+    .btn-primary {
+      display: inline-block;
+      padding: 12px 34px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #a855f7 100%);
+      color: white;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      border-radius: 100px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 4px 24px rgba(99,102,241,0.35);
+      transition: opacity .2s, transform .15s, box-shadow .2s;
+    }
+    .btn-primary:hover {
+      opacity: .92;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99,102,241,0.5);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ── Footer ── */
+    .foot {
+      position: fixed; bottom: 16px; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 9px; letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(71,85,105,0.5);
+      z-index: 10; white-space: nowrap;
+    }
+
+    /* ── Neon text (matches .neon-text) ── */
+    .neon-text {
+      text-shadow: 0 0 20px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.3);
+    }
+
+    @media (max-width:400px) {
+      .corner { width:32px; height:32px; }
+      .redirect-box { padding: 24px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-bg"></div>
+  <div class="glow-center"></div>
+  <div class="scanline"></div>
+  <div class="corner c-tl"></div>
+  <div class="corner c-tr"></div>
+  <div class="corner c-bl"></div>
+  <div class="corner c-br"></div>
+  <div class="particles" id="pts"></div>
+
+  <div class="center">
+
+    <div class="icon-ring">
+      <div class="ring-spin"></div>
+      <div class="ring-spin-2"></div>
+      <span class="ring-icon">⚖️</span>
+    </div>
+
+    <h1 class="headline" id="headline">Sie werden weitergeleitet</h1>
+    <p class="sub-text" id="subtext">Guthaben &amp; Schulden Pro &nbsp;·&nbsp; Bitte warten</p>
+
+    <div class="glass-panel redirect-box">
+
+      <div class="redirect-label" id="redirect-label">⟳ &nbsp; Automatische Weiterleitung</div>
+
+      <div class="prog-nums">
+        <div class="prog-dots">
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+          <div class="thinking-dot"></div>
+        </div>
+        <span class="prog-pct" id="pct">0%</span>
+      </div>
+
+      <div class="prog-bar"><div class="prog-fill"></div></div>
+
+      <div style="height:20px"></div>
+
+      <div class="url-chip">
+        <span class="live-dot"></span>
+        <span><span class="url-hl">higer23.github.io</span>/Guthaben-Schulden-Pro/</span>
+      </div>
+
+      <a href="https://higer23.github.io/Guthaben-Schulden-Pro/" class="btn-primary" id="btn-go">
+        Jetzt öffnen →
+      </a>
+
+    </div>
+
+  </div>
+
+  <div class="foot">⚖ &nbsp; Guthaben &amp; Schulden Pro &nbsp;·&nbsp; 2025</div>
+
+  <script>
+    /* ── Language Detection ── */
+    const lang = (navigator.language || navigator.userLanguage || 'de').toLowerCase();
+    const isTurkish = lang.startsWith('tr');
+
+    const strings = {
+      de: {
+        title:    'Sie werden weitergeleitet',
+        sub:      'Guthaben \u0026 Schulden Pro \u00b7 Bitte warten',
+        label:    '\u27f3 \u00a0 Automatische Weiterleitung',
+        btn:      'Jetzt \u00f6ffnen \u2192',
+        htmlLang: 'de',
+      },
+      tr: {
+        title:    'Y\u00f6nlendiriliyorsunuz',
+        sub:      'Guthaben \u0026 Schulden Pro \u00b7 L\u00fctfen Bekleyiniz',
+        label:    '\u27f3 \u00a0 Otomatik Y\u00f6nlendirme',
+        btn:      'Hemen Git \u2192',
+        htmlLang: 'tr',
       }
-    });
-    window.addEventListener('unhandledrejection', (e) => {
-      console.error('[UNHANDLED PROMISE]', e.reason);
-    });
+    };
+
+    const s = isTurkish ? strings.tr : strings.de;
+    document.documentElement.lang  = s.htmlLang;
+    document.getElementById('headline').textContent      = s.title;
+    document.getElementById('subtext').innerHTML         = s.sub;
+    document.getElementById('redirect-label').innerHTML  = s.label;
+    document.getElementById('btn-go').textContent        = s.btn;
+    document.title = isTurkish ? 'Y\u00f6nlendiriliyorsunuz\u2026' : 'Weiterleitung\u2026';
+
+    /* ── Particles ── */
+    const pts = document.getElementById('pts');
+    const colors = [
+      'rgba(0,212,255,',
+      'rgba(168,85,247,',
+      'rgba(0,255,136,',
+      'rgba(99,102,241,'
+    ];
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      const c = colors[i % colors.length];
+      const s2 = Math.random() * 4 + 1.5;
+      p.className = 'p';
+      p.style.cssText = `
+        left:${Math.random()*100}%;
+        width:${s2}px; height:${s2}px;
+        background:${c}0.6);
+        box-shadow:0 0 ${s2*2}px ${c}0.7);
+        animation-duration:${Math.random()*10+7}s;
+        animation-delay:${Math.random()*12}s`;
+      pts.appendChild(p);
+    }
+
+    /* ── Percent counter ── */
+    const pctEl = document.getElementById('pct');
+    const dur = 3700;
+    const t0  = performance.now();
+    (function tick(now) {
+      const r = Math.min((now - t0) / dur, 1);
+      pctEl.textContent = Math.round(r * 100) + '%';
+      if (r < 1) requestAnimationFrame(tick);
+    })(t0);
+
+    /* ── Redirect ── */
+    setTimeout(() => {
+      location.href = 'https://higer23.github.io/Guthaben-Schulden-Pro/';
+    }, 4000);
   </script>
 </body>
 </html>
